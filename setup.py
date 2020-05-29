@@ -1,0 +1,5 @@
+api_key_yandex = input('Enter api_key_yandex ')
+file_env = open('.env', 'w', encoding='utf-8')
+file_env.write('api_key_yandex={}'.format(api_key_yandex))
+file_env.close()
+print('Setup script completed successfully')

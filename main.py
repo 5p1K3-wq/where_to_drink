@@ -1,20 +1,18 @@
 import json
-import os
 import folium
+import os
 from requests import get
-from dotenv import load_dotenv
-from pathlib import Path
+from dotenv import load_dotenv, find_dotenv
 from geopy import distance
 from flask import Flask
 
-env_path = Path('.') / '.env'
-load_dotenv(dotenv_path=env_path, verbose=True)
-API_KEY_YANDEX = os.getenv('api_key_yandex')
+load_dotenv(find_dotenv())
+API_KEY = os.getenv('API_KEY')
 
 
 def fetch_coordinates(place):
     base_url = "https://geocode-maps.yandex.ru/1.x"
-    params = {"geocode": place, "apikey": API_KEY_YANDEX, "format": "json"}
+    params = {"geocode": place, "apikey": API_KEY, "format": "json"}
     response = get(base_url, params=params)
     response.raise_for_status()
     places_found = response.json()['response']['GeoObjectCollection']['featureMember']
@@ -23,22 +21,21 @@ def fetch_coordinates(place):
     return lat, lon
 
 
-def get_distance_between_two_coordinates(where_from, to_where):
-    return distance.distance(where_from, to_where).kilometers
+def get_distance_between_two_coordinates(where, to):
+    return distance.distance(where, to).kilometers
 
 
 def get_bar_distance(bar):
     return bar['distance']
 
 
-def get_nearest_bars(bars_list, count_bar):
-    bars_list_sort = sorted(bars_list, key=get_bar_distance)
-    return bars_list_sort[:count_bar]
+def get_nearest_bars(bars, count_bar):
+    return sorted(bars, key=get_bar_distance)[:count_bar]
 
 
 def show_bars():
-    with open('map.html') as my_map:
-        return my_map.read()
+    with open('map.html') as map:
+        return map.read()
 
 
 def show_bars_on_a_map():
@@ -48,7 +45,7 @@ def show_bars_on_a_map():
 
 
 def save_bars_to_file(user_coordinates, bars):
-    my_map = folium.Map(
+    map = folium.Map(
         location=user_coordinates,
         zoom_start=13
     )
@@ -57,7 +54,7 @@ def save_bars_to_file(user_coordinates, bars):
         location=user_coordinates,
         icon=folium.Icon(color='red'),
         popup='Вы здесь!'
-    ).add_to(my_map)
+    ).add_to(map)
 
     for bar in bars:
         coordinates = (bar['latitude'], bar['longitude'])
@@ -65,17 +62,17 @@ def save_bars_to_file(user_coordinates, bars):
             location=coordinates,
             icon=folium.Icon(color='green'),
             popup=bar['title']
-        ).add_to(my_map)
-    my_map.save('map.html')
+        ).add_to(map)
+    map.save('map.html')
 
 
 def get_bars(user_coordinates):
-    with open("src/bars.json", "r", encoding="CP1251") as bars_file:
-        bars_data = bars_file.read()
+    with open("src/bars.json", "r", encoding="CP1251") as file:
+        file_data = file.read()
 
-    bars_json = json.loads(bars_data)
+    contents = json.loads(file_data)
     bars = []
-    for bar in bars_json:
+    for bar in contents:
         lat = bar['geoData']['coordinates'][1]
         lon = bar['geoData']['coordinates'][0]
         bar_coordinates = (lat, lon)
@@ -90,15 +87,15 @@ def get_bars(user_coordinates):
     return bars
 
 
-def main():
-    where_i_am = input('Где вы находитесь? ')
-    my_coordinates = fetch_coordinates(where_i_am)
-    bars = get_bars(my_coordinates)
+def def_main():
+    location = input('Где вы находитесь? ')
+    user_coordinates = fetch_coordinates(location)
+    bars = get_bars(user_coordinates)
     show_number_bars = 5
     nearest_bars = get_nearest_bars(bars, show_number_bars)
-    save_bars_to_file(my_coordinates, nearest_bars)
+    save_bars_to_file(user_coordinates, nearest_bars)
     show_bars_on_a_map()
 
 
 if __name__ == '__main__':
-    main()
+    def_main()

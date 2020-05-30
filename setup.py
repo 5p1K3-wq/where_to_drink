@@ -1,5 +1,4 @@
-api_key_yandex = input('Enter api_key_yandex ')
-file_env = open('.env', 'w', encoding='utf-8')
-file_env.write('api_key_yandex={}'.format(api_key_yandex))
-file_env.close()
+api_key = input('Enter the api key for Yandex geocoder ')
+with open('.env', 'w', encoding='utf-8') as file_env:
+    file_env.write('API_KEY={}'.format(api_key))
 print('Setup script completed successfully')

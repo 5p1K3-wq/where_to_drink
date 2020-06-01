@@ -6,13 +6,10 @@ from dotenv import load_dotenv, find_dotenv
 from geopy import distance
 from flask import Flask
 
-load_dotenv(find_dotenv())
-API_KEY = os.getenv('API_KEY')
 
-
-def fetch_coordinates(place):
+def fetch_coordinates(api_key, place):
     base_url = "https://geocode-maps.yandex.ru/1.x"
-    params = {"geocode": place, "apikey": API_KEY, "format": "json"}
+    params = {"geocode": place, "apikey": api_key, "format": "json"}
     response = get(base_url, params=params)
     response.raise_for_status()
     places_found = response.json()['response']['GeoObjectCollection']['featureMember']
@@ -34,8 +31,8 @@ def get_nearest_bars(bars, count_bar):
 
 
 def show_bars():
-    with open('map.html') as map:
-        return map.read()
+    with open('map.html') as map_with_the_nearest_bars:
+        return map_with_the_nearest_bars.read()
 
 
 def show_bars_on_a_map():
@@ -45,7 +42,7 @@ def show_bars_on_a_map():
 
 
 def save_bars_to_file(user_coordinates, bars):
-    map = folium.Map(
+    map_with_the_nearest_bars = folium.Map(
         location=user_coordinates,
         zoom_start=13
     )
@@ -54,7 +51,7 @@ def save_bars_to_file(user_coordinates, bars):
         location=user_coordinates,
         icon=folium.Icon(color='red'),
         popup='Вы здесь!'
-    ).add_to(map)
+    ).add_to(map_with_the_nearest_bars)
 
     for bar in bars:
         coordinates = (bar['latitude'], bar['longitude'])
@@ -62,8 +59,8 @@ def save_bars_to_file(user_coordinates, bars):
             location=coordinates,
             icon=folium.Icon(color='green'),
             popup=bar['title']
-        ).add_to(map)
-    map.save('map.html')
+        ).add_to(map_with_the_nearest_bars)
+    map_with_the_nearest_bars.save('map.html')
 
 
 def get_bars(user_coordinates):
@@ -87,9 +84,11 @@ def get_bars(user_coordinates):
     return bars
 
 
-def def_main():
+def main():
+    load_dotenv(find_dotenv())
+    api_key = os.getenv('API_KEY')
     location = input('Где вы находитесь? ')
-    user_coordinates = fetch_coordinates(location)
+    user_coordinates = fetch_coordinates(api_key, location)
     bars = get_bars(user_coordinates)
     show_number_bars = 5
     nearest_bars = get_nearest_bars(bars, show_number_bars)
@@ -98,4 +97,4 @@ def def_main():
 
 
 if __name__ == '__main__':
-    def_main()
+    main()
